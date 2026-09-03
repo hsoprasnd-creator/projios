@@ -1,0 +1,40 @@
+name: Build iOS Tweak (Dylib)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+jobs:
+  build:
+    runs-on: macos-latest  # macOS with Xcode installed
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Theos
+        run: |
+          # Download and install Theos
+          export THEOS=/opt/theos
+          sudo mkdir -p $THEOS
+          sudo git clone --recursive https://github.com/theos/theos.git $THEOS
+          echo "THEOS=/opt/theos" >> $GITHUB_ENV
+          echo "$THEOS/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          # Install required tools via Homebrew (if any)
+          brew install ldid  # for signing (optional, Theos includes its own but good to have)
+
+      - name: Build tweak
+        run: |
+          make package
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pubg-esp-deb
+          path: packages/*.deb
