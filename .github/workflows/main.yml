@@ -23,47 +23,39 @@ jobs:
           echo "THEOS=$THEOS" >> $GITHUB_ENV
           echo "$THEOS/bin" >> $GITHUB_PATH
 
-      - name: Download and install iOS SDK with Fallback Backup Links
+      - name: Download and install iOS SDK
         run: |
           export THEOS=/opt/theos
           sudo mkdir -p $THEOS/sdks
           
-          # Primary Source: Theos official sdks zip archive
-          echo "Trying primary SDK source..."
-          if sudo curl -L -o /tmp/sdk.zip https://github.com/theos/sdks/archive/refs/heads/master.zip; then
-            sudo unzip -q /tmp/sdk.zip -d /tmp/ || true
-            if [ -d "/tmp/sdks-master" ]; then
-              sudo cp -r /tmp/sdks-master/* $THEOS/sdks/ || true
-            fi
-          fi
-
-          # Fallback Source 1: xybp888 repo tar.xz
-          if [ ! -d "$THEOS/sdks/iPhoneOS15.0.sdk" ] && [ ! -d "$THEOS/sdks/iPhoneOS.sdk" ]; then
-            echo "Primary failed or missing. Trying Fallback source 1..."
-            sudo curl -L -o /tmp/iPhoneOS15.0.sdk.tar.xz https://github.com/xybp888/iOS-SDKs/raw/master/iPhoneOS15.0.sdk.tar.xz || true
-            sudo tar -xf /tmp/iPhoneOS15.0.sdk.tar.xz -C $THEOS/sdks/ 2>/dev/null || true
-          fi
-
-          # Fallback Source 2: Clone repository directly as a last resort
-          if [ ! -d "$THEOS/sdks/iPhoneOS15.0.sdk" ] && [ ! -d "$THEOS/sdks/iPhoneOS.sdk" ]; then
-            echo "Fallbacks failed. Trying Git Clone fallback..."
-            sudo git clone --depth=1 https://github.com/theos/sdks.git /tmp/fallback-sdks || true
-            sudo cp -r /tmp/fallback-sdks/* $THEOS/sdks/ || true
-          fi
-
-          # Final verification to ensure at least one valid SDK exists
-          echo "Checking installed SDKs..."
-          ls -la $THEOS/sdks/
+          # Direct stable repo clone taaki 100% koi ek SDK folder mil jaye
+          sudo git clone --depth=1 https://github.com/theos/sdks.git /tmp/theos-sdks
+          sudo cp -r /tmp/theos-sdks/* $THEOS/sdks/ || true
+          
+          # Agar phir bhi koi SDK na ho toh fallback download
           if [ -z "$(ls -A $THEOS/sdks/)" ]; then
-            echo "Error: All SDK download methods failed completely!"
+            sudo curl -L -o /tmp/sdk.zip https://github.com/theos/sdks/archive/refs/heads/master.zip
+            sudo unzip -q /tmp/sdk.zip -d /tmp/
+            sudo cp -r /tmp/sdks-master/* $THEOS/sdks/ || true
+          fi
+          
+          echo "Installed SDKs:"
+          ls -la $THEOS/sdks/
+
+      - name: Auto-detect and fix Makefile SDK version
+        run: |
+          # Theos sdks folder ke andar jo bhi SDK folder mila hai uska naam pata karo
+          SDK_DIR=$(ls -d /opt/theos/sdks/*.sdk | head -n 1 | xargs basename | sed 's/\.sdk//')
+          echo "Found SDK: $SDK_DIR"
+          
+          # Makefile ke andar SDK version ko automatically update kar do jo folder available hai
+          if [ -f "Makefile" ]; then
+            sed -i '' "s/iphone:clang:.*:.*/iphone:clang:${SDK_DIR#iPhoneOS}:14.0/g" Makefile || true
+            cat Makefile
+          else
+            echo "Makefile not found!"
             exit 1
           fi
-
-      - name: Auto-adjust Makefile SDK version
-        run: |
-          sed -i '' 's/iphone:clang:14.5:14.0/iphone:clang:15.0:14.0/' Makefile || true
-          sed -i '' 's/iphone:clang:14.0:14.0/iphone:clang:15.0:14.0/' Makefile || true
-          cat Makefile
 
       - name: Build tweak
         run: |
