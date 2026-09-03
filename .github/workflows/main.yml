@@ -27,14 +27,13 @@ jobs:
         run: |
           export THEOS=/opt/theos
           sudo mkdir -p $THEOS/sdks
-          # Git clone use kar rahe hain taaki LFS / tar format ka koi chakkar hi na rahe
+          # Direct proper link se iPhoneOS SDK clone/download kar rahe hain taaki koi faltu file copy na ho
           sudo git clone --depth=1 https://github.com/theos/sdks.git /tmp/theos-sdks
-          sudo cp -r /tmp/theos-sdks/*.sdk $THEOS/sdks/
+          sudo cp -r /tmp/theos-sdks/iPhoneOS15.0.sdk $THEOS/sdks/
           ls -la $THEOS/sdks/
 
       - name: Auto-adjust Makefile SDK version
         run: |
-          # Makefile ke andar SDK version check karke adjust kar lo
           sed -i '' 's/iphone:clang:14.5:14.0/iphone:clang:15.0:14.0/' Makefile || true
           cat Makefile
 
