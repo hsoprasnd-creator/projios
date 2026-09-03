@@ -28,29 +28,42 @@ jobs:
           export THEOS=/opt/theos
           sudo mkdir -p $THEOS/sdks
           
-          # Direct stable repo clone taaki 100% koi ek SDK folder mil jaye
-          sudo git clone --depth=1 https://github.com/theos/sdks.git /tmp/theos-sdks
-          sudo cp -r /tmp/theos-sdks/* $THEOS/sdks/ || true
+          # Sirf iPhoneOS 15.0 SDK direct download kar rahe hain taaki koi dusri TV/Watch SDK beech mein na aaye
+          sudo curl -L -o /tmp/iPhoneOS15.0.sdk.tar.xz https://github.com/theos/sdks/raw/master/iPhoneOS15.0.sdk.tar.xz || true
           
-          # Agar phir bhi koi SDK na ho toh fallback download
-          if [ -z "$(ls -A $THEOS/sdks/)" ]; then
-            sudo curl -L -o /tmp/sdk.zip https://github.com/theos/sdks/archive/refs/heads/master.zip
-            sudo unzip -q /tmp/sdk.zip -d /tmp/
-            sudo cp -r /tmp/sdks-master/* $THEOS/sdks/ || true
+          # Agar tar.xz fail ho toh direct git se iPhoneOS15.0 folder clone karenge
+          if [ ! -d "$THEOS/sdks/iPhoneOS15.0.sdk" ]; then
+            sudo git clone --depth=1 https://github.com/xybp888/iOS-SDKs.git /tmp/ios-sdks || true
+            if [ -d "/tmp/ios-sdks" ]; then
+              sudo cp -r /tmp/ios-sdks/*.sdk $THEOS/sdks/ || true
+            fi
           fi
           
-          echo "Installed SDKs:"
+          # Agar phir bhi na aaye toh theos sdks repo se sirf iPhoneOS wali copy karo
+          if [ ! -d "$THEOS/sdks/iPhoneOS15.0.sdk" ]; then
+            sudo git clone --depth=1 https://github.com/theos/sdks.git /tmp/theos-sdks || true
+            sudo cp -r /tmp/theos-sdks/iPhoneOS*.sdk $THEOS/sdks/ || true
+          fi
+
+          echo "Final Installed SDKs:"
           ls -la $THEOS/sdks/
 
       - name: Auto-detect and fix Makefile SDK version
         run: |
-          # Theos sdks folder ke andar jo bhi SDK folder mila hai uska naam pata karo
-          SDK_DIR=$(ls -d /opt/theos/sdks/*.sdk | head -n 1 | xargs basename | sed 's/\.sdk//')
-          echo "Found SDK: $SDK_DIR"
+          # Sirf iPhoneOS SDK ko filter karke version nikalenge
+          SDK_DIR=$(ls -d /opt/theos/sdks/iPhoneOS*.sdk | head -n 1 | xargs basename | sed 's/\.sdk//')
+          echo "Found iPhone SDK: $SDK_DIR"
           
-          # Makefile ke andar SDK version ko automatically update kar do jo folder available hai
+          if [ -z "$SDK_DIR" ]; then
+            echo "Error: No iPhoneOS SDK found!"
+            exit 1
+          fi
+          
+          VERSION=${SDK_DIR#iPhoneOS}
+          echo "Setting Makefile SDK version to: $VERSION"
+          
           if [ -f "Makefile" ]; then
-            sed -i '' "s/iphone:clang:.*:.*/iphone:clang:${SDK_DIR#iPhoneOS}:14.0/g" Makefile || true
+            sed -i '' "s/iphone:clang:.*:.*/iphone:clang:$VERSION:14.0/g" Makefile || true
             cat Makefile
           else
             echo "Makefile not found!"
