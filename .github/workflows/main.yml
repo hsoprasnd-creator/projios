@@ -27,14 +27,15 @@ jobs:
         run: |
           export THEOS=/opt/theos
           sudo mkdir -p $THEOS/sdks
-          sudo curl -L -o $THEOS/sdks/iPhoneOS15.0.sdk.tar.xz https://github.com/xybp888/iOS-SDKs/raw/master/iPhoneOS15.0.sdk.tar.xz
-          sudo tar -xf $THEOS/sdks/iPhoneOS15.0.sdk.tar.xz -C $THEOS/sdks/
+          # Git clone use kar rahe hain taaki LFS / tar format ka koi chakkar hi na rahe
+          sudo git clone --depth=1 https://github.com/theos/sdks.git /tmp/theos-sdks
+          sudo cp -r /tmp/theos-sdks/*.sdk $THEOS/sdks/
           ls -la $THEOS/sdks/
 
       - name: Auto-adjust Makefile SDK version
         run: |
-          # Change iOS 14.5 to 15.0 to match downloaded SDK
-          sed -i '' 's/iphone:clang:14.5:14.0/iphone:clang:15.0:14.0/' Makefile
+          # Makefile ke andar SDK version check karke adjust kar lo
+          sed -i '' 's/iphone:clang:14.5:14.0/iphone:clang:15.0:14.0/' Makefile || true
           cat Makefile
 
       - name: Build tweak
