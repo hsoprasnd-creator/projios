@@ -23,24 +23,22 @@ jobs:
           echo "THEOS=$THEOS" >> $GITHUB_ENV
           echo "$THEOS/bin" >> $GITHUB_PATH
 
-      - name: Download and install iOS SDK
+      - name: Download and install iOS 15.0 SDK
         run: |
           export THEOS=/opt/theos
           sudo mkdir -p $THEOS/sdks
-          sudo git clone --depth=1 https://github.com/xybp888/iOS-SDKs.git /tmp/ios-sdks
-          sudo cp -r /tmp/ios-sdks/*.sdk $THEOS/sdks/
+          sudo rm -rf $THEOS/sdks/*
+          
+          # Stable iPhoneOS 15.0 SDK download kar rahe hain jo modules error nahi deta
+          sudo curl -L -o /tmp/iPhoneOS15.0.sdk.tar.xz https://github.com/xybp888/iOS-SDKs/raw/master/iPhoneOS15.0.sdk.tar.xz
+          sudo tar -xf /tmp/iPhoneOS15.0.sdk.tar.xz -C $THEOS/sdks/
+          
           ls -la $THEOS/sdks/
 
-      - name: Auto-detect and set Makefile SDK version
+      - name: Force Makefile SDK version to 15.0
         run: |
-          SDK_DIR=$(ls -d /opt/theos/sdks/iPhoneOS*.sdk | head -n 1 | xargs basename | sed 's/\.sdk//')
-          echo "Found SDK: $SDK_DIR"
-          
-          VERSION=${SDK_DIR#iPhoneOS}
-          echo "Setting Makefile SDK version to: $VERSION"
-          
           if [ -f "Makefile" ]; then
-            sed -i '' "s/iphone:clang:.*:.*/iphone:clang:$VERSION:14.0/g" Makefile
+            sed -i '' 's/iphone:clang:.*:.*/iphone:clang:15.0:14.0/g' Makefile
             cat Makefile
           else
             echo "Makefile not found!"
