@@ -1,9 +1,0 @@
-Package: com.yourname.pubgesp
-Name: PubG ESP
-Version: 1.0
-Architecture: iphoneos-arm
-Description: ESP overlay for PUBG Mobile
-Maintainer: You
-Author: You
-Section: Tweaks
-Depends: mobilesubstrate
