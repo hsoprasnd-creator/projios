@@ -1,4 +1,4 @@
-name: Build iOS Tweak (Dylib)
+name: Build PUBG ESP Dylib
 
 on:
   push:
@@ -27,10 +27,16 @@ jobs:
         run: |
           export THEOS=/opt/theos
           sudo mkdir -p $THEOS/sdks
-          # Download iOS 15.0 SDK from Theos SDK repository
-          sudo curl -L -o /tmp/iPhoneOS15.0.sdk.tar.xz https://github.com/theos/sdks/raw/master/iPhoneOS15.0.sdk.tar.xz
+          # Download iOS 15.0 SDK from xybp888's repository (regular file, not LFS)
+          sudo curl -L -o /tmp/iPhoneOS15.0.sdk.tar.xz https://github.com/xybp888/iOS-SDKs/raw/master/iPhoneOS15.0.sdk.tar.xz
           sudo tar -xf /tmp/iPhoneOS15.0.sdk.tar.xz -C $THEOS/sdks/
           ls -la $THEOS/sdks/
+
+      - name: Auto-adjust Makefile SDK version
+        run: |
+          # Change iOS 14.5 to 15.0 to match downloaded SDK
+          sed -i '' 's/iphone:clang:14.5:14.0/iphone:clang:15.0:14.0/' Makefile
+          cat Makefile
 
       - name: Build tweak
         run: |
