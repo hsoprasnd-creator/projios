@@ -27,9 +27,8 @@ jobs:
         run: |
           export THEOS=/opt/theos
           sudo mkdir -p $THEOS/sdks
-          # Download iOS 15.0 SDK from xybp888's repository (regular file, not LFS)
-          sudo curl -L -o /tmp/iPhoneOS15.0.sdk.tar.xz https://github.com/xybp888/iOS-SDKs/raw/master/iPhoneOS15.0.sdk.tar.xz
-          sudo tar -xf /tmp/iPhoneOS15.0.sdk.tar.xz -C $THEOS/sdks/
+          sudo curl -L -o $THEOS/sdks/iPhoneOS15.0.sdk.tar.xz https://github.com/xybp888/iOS-SDKs/raw/master/iPhoneOS15.0.sdk.tar.xz
+          sudo tar -xf $THEOS/sdks/iPhoneOS15.0.sdk.tar.xz -C $THEOS/sdks/
           ls -la $THEOS/sdks/
 
       - name: Auto-adjust Makefile SDK version
